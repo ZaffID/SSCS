@@ -1,0 +1,114 @@
+import type { Component } from 'solid-js';
+import { createSignal, onCleanup } from 'solid-js';
+import { IoNotifications } from 'solid-icons/io';
+import { alerts } from '../store/data';
+
+const Navbar: Component = () => {
+  const [now, setNow] = createSignal(new Date());
+  const [openNotif, setOpenNotif] = createSignal(false);
+  const unreadCount = () => alerts().length;
+
+  let notifRef: HTMLDivElement | undefined;
+  const handleDocClick = (e: MouseEvent) => {
+    if (openNotif() && notifRef && !notifRef.contains(e.target as Node)) {
+      setOpenNotif(false);
+    }
+  };
+  const timer = setInterval(() => setNow(new Date()), 1000);
+  document.addEventListener('click', handleDocClick);
+  onCleanup(() => {
+    clearInterval(timer);
+    document.removeEventListener('click', handleDocClick);
+  });
+
+  const dateStr = () => now().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = () => now().toLocaleTimeString('id-ID', { hour12: false });
+
+  return (
+    <header class="h-16 bg-white/70 backdrop-blur border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+      {/* Kiri: breadcrumb + search */}
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <button class="md:hidden p-2 rounded-lg border border-slate-200">☰</button>
+        <div class="hidden sm:flex items-center gap-2 text-slate-500">
+          {/* Home icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.125 1.125 0 011.592 0L21.75 12M4.5 9.75V21a.75.75 0 00.75.75H9.75v-6h4.5v6h4.5a.75.75 0 00.75-.75V9.75"/></svg>
+          <span>/</span>
+          <span class="text-slate-800 font-medium">Dashboard</span>
+        </div>
+
+        {/* Search pill */}
+        <div class="flex-1 max-w-xl ml-2">
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"/></svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search assets, spare parts or ..."
+              class="w-full pl-9 pr-3 py-2 rounded-full border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-[var(--brand-blue)] focus:ring-[var(--brand-blue)]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Kanan: date badge, time badge, bell, avatar */}
+      <div class="flex items-center gap-3 text-sm text-slate-600">
+        <div class="hidden md:flex items-center gap-2">
+          <div class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-blue)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M7.5 3.75h9A2.25 2.25 0 0118.75 6v12A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V6A2.25 2.25 0 017.5 3.75z"/></svg>
+            <span>{dateStr()}</span>
+          </div>
+          <div class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-blue)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <span>{timeStr()}</span>
+          </div>
+        </div>
+
+        <div class="relative" ref={(el) => (notifRef = el as HTMLDivElement)}>
+          <button
+            class="relative w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenNotif(!openNotif());
+            }}
+            aria-label="Notifications"
+          >
+            {/* Bell icon (solid-icons) */}
+            <IoNotifications class="w-5 h-5 text-slate-600" />
+            {/* unread badge */}
+            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-4 px-1 rounded-full text-[10px] leading-4 text-white text-center"
+              style={{ background: 'var(--brand-red)' }}>{unreadCount()}</span>
+          </button>
+
+          {/* Dropdown */}
+          {openNotif() && (
+            <div class="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-40">
+              <div class="px-4 py-2 text-sm font-medium text-slate-700 flex items-center justify-between bg-slate-50">
+                <span>Notifications</span>
+                <span class="text-xs text-slate-500">{unreadCount()} unread</span>
+              </div>
+              <ul class="max-h-80 overflow-auto">
+                {alerts().map(n => (
+                  <li class="px-4 py-3 flex items-start gap-3 hover:bg-slate-50">
+                    <span class="mt-1 inline-block w-2 h-2 rounded-full" style={{ background: n.level === 'error' ? 'var(--brand-red)' : 'var(--brand-blue)' }}></span>
+                    <div class="flex-1">
+                      <p class="text-sm text-slate-800">{n.message}</p>
+                    </div>
+                    <span class="text-[10px] text-slate-500">NEW</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div class="relative w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold" style={{ background: 'linear-gradient(135deg, var(--brand-red), var(--brand-yellow))' }}>
+          N
+          <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white" style={{ background: 'var(--brand-green)' }}></span>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Navbar;
