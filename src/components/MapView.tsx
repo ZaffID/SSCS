@@ -5,7 +5,7 @@ import { statusColor } from '../store/data';
 // Menggunakan Leaflet via CDN (global `L` dari window)
 declare const L: any;
 
-export default function MapView(props: { stations: Station[]; onSelect?: (s: Station) => void }) {
+export default function MapView(props: { stations: Station[]; onSelect?: (s: Station) => void; showCoverage?: boolean }) {
   let mapEl!: HTMLDivElement;
   let map: any;
   const markers: any[] = [];
@@ -20,13 +20,15 @@ export default function MapView(props: { stations: Station[]; onSelect?: (s: Sta
     }).addTo(map);
 
     // Coverage contoh (polygon kasar Indonesia barat)
-    const coverage = L.polygon([
-      [-5.9, 95.0],
-      [-5.9, 120.0],
-      [2.0, 120.0],
-      [2.0, 95.0],
-    ], { color: 'var(--brand-purple)', weight: 1, fillColor: 'var(--brand-purple)', fillOpacity: 0.1 });
-    coverage.addTo(map);
+    if (props.showCoverage !== false) {
+      const coverage = L.polygon([
+        [-5.9, 95.0],
+        [-5.9, 120.0],
+        [2.0, 120.0],
+        [2.0, 95.0],
+      ], { color: 'var(--brand-purple)', weight: 1, fillColor: 'var(--brand-purple)', fillOpacity: 0.1 });
+      coverage.addTo(map);
+    }
 
     // Add stations
     props.stations.forEach((s) => {

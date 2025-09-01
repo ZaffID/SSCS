@@ -5,4 +5,25 @@
   --brand-purple: #7C3AED; /* Secondary */
   --brand-yellow: #F59E0B; /* Secondary */
   --brand-orange: #F97316; /* Secondary */
+
+  /* Neutrals for UI surfaces */
+  --surface-0: #ffffff;
+  --surface-1: #fafafa;
+  --border-weak: rgba(2, 6, 23, 0.06);
+
+  /* Sidebar refined palette (softer reds) */
+  --sidebar-start: #b91c1c;  /* red-700 */
+  --sidebar-middle: #dc2626; /* red-600 */
+  --sidebar-end: #ef4444;    /* red-500 */
+  --sidebar-border: rgba(185, 28, 28, 0.32);
+  --sidebar-tint: rgba(255, 255, 255, 0.08);
+
+  /* Layout */
+  --sidebar-width: 16rem; /* default expanded */
+}
+
+@media (max-width: 767px) {
+  :root {
+    --sidebar-width: 0; /* no left padding on small screens */
+  }
 }
