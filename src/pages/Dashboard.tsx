@@ -11,17 +11,21 @@ const StatCard: Component<{ title: string; value: string; delta?: string; color?
       ? 'var(--brand-red)'
       : 'var(--brand-blue)';
 
+  const accent = props.color || 'var(--brand-blue)';
+
   return (
-    <div class={`group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow`}> 
-      <div class="text-slate-500 text-sm flex items-center gap-2">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-300 group-hover:bg-slate-400"></span>
-        <p>{props.title}</p>
-      </div>
-      <div class="mt-2 flex items-end justify-between">
-        <h3 class="text-3xl font-semibold tracking-tight">{props.value}</h3>
-        {props.delta && (
-          <span class={`text-xs font-medium bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5`} style={{ color: deltaColor() }}>{props.delta}</span>
-        )}
+    <div class="group rounded-2xl p-[1px] bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 shadow-sm hover:shadow-md transition-shadow">
+      <div class="rounded-2xl bg-white p-5">
+        <div class="text-slate-500 text-xs uppercase tracking-wide flex items-center gap-2">
+          <span class="inline-block w-1.5 h-1.5 rounded-full" style={{ background: accent }}></span>
+          <p>{props.title}</p>
+        </div>
+        <div class="mt-2 flex items-end justify-between">
+          <h3 class="text-3xl font-semibold tracking-tight">{props.value}</h3>
+          {props.delta && (
+            <span class={`text-[10px] font-medium bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5`} style={{ color: deltaColor() }}>{props.delta}</span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -56,29 +60,43 @@ const Dashboard: Component = () => {
 
   return (
     <div class="p-4 md:p-6 space-y-6">
-      {/* Baris metrik utama */}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total SPBU" value={`${kpi().total}`} />
-        <StatCard title="Connected" value={`${kpi().connected}`} delta="↑" />
-        <StatCard title="On-Route" value={`${kpi().onroute}`} />
-        <StatCard title="Offline" value={`${kpi().offline}`} delta="↓" />
+      {/* Header */}
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Operations Dashboard</h1>
+          <p class="text-slate-600 text-sm md:text-base mt-1">Real‑time visibility of network health, rollout, and field activities.</p>
+        </div>
+        <div class="hidden sm:flex items-center gap-2">
+          <button class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 bg-white hover:bg-slate-50">Export</button>
+          <button class="px-3 py-1.5 text-sm rounded-lg bg-[var(--brand-blue)] text-white">Refresh</button>
+        </div>
       </div>
 
-      {/* Peta dan legenda */}
+      {/* KPI cards */}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <StatCard title="Total Sites" value={`${kpi().total}`} color="var(--brand-blue)" />
+        <StatCard title="Connected" value={`${kpi().connected}`} delta="↑" color="var(--brand-green)" />
+        <StatCard title="On Route" value={`${kpi().onroute}`} color="var(--brand-orange)" />
+        <StatCard title="Offline" value={`${kpi().offline}`} delta="↓" color="var(--brand-red)" />
+        <StatCard title="Priority" value={`${kpi().priority}`} color="var(--brand-purple)" />
+      </div>
+
+      {/* Map + side insights */}
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2">
           <div class="rounded-2xl bg-white border border-slate-200 p-3 shadow-sm">
             {/* Top summary strip */}
             <div class="flex flex-wrap items-center justify-between gap-3 px-1 pb-2">
               <div>
-                <h2 class="text-base font-semibold">Live Map</h2>
-                <p class="text-xs text-[var(--brand-blue)]/90 font-medium">Center Visual (GIS Map)</p>
+                <h2 class="text-base font-semibold">Live Network Map</h2>
+                <p class="text-xs text-slate-500">Geo view of stations and real‑time connectivity.</p>
               </div>
               <div class="flex items-center gap-3 text-xs md:text-sm">
                 <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.connected }} />Total: {kpi().total}</div>
                 <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.connected }} />Connected: {kpi().connected}</div>
                 <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.offline }} />Offline: {kpi().offline}</div>
                 <div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400" />Uptime: 99.5%</div>
+                <button class="ml-2 px-2.5 py-1 text-xs rounded-md border border-slate-200 bg-white hover:bg-slate-50">Refresh</button>
               </div>
             </div>
 
@@ -120,15 +138,37 @@ const Dashboard: Component = () => {
               </div>
             </div>
           </div>
-          {/* Implementation Progress */}
+          {/* Implementation Roadmap (stepper) */}
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-            <h3 class="font-semibold text-[var(--brand-blue)]">Implementation Progress</h3>
-            <ol class="mt-3 space-y-3 text-sm text-slate-700">
-              <li class="flex items-center gap-3"><span class="size-2 rounded-full bg-[--brand-blue]"></span><span class="flex-1">Planning</span><span class="text-slate-500">100%</span></li>
-              <li class="flex items-center gap-3"><span class="size-2 rounded-full bg-[--brand-green]"></span><span class="flex-1">Deployment</span><span class="text-slate-500">65%</span></li>
-              <li class="flex items-center gap-3"><span class="size-2 rounded-full bg-[--brand-orange]"></span><span class="flex-1">Verification</span><span class="text-slate-500">42%</span></li>
-              <li class="flex items-center gap-3"><span class="size-2 rounded-full bg-[--brand-purple]"></span><span class="flex-1">Handover</span><span class="text-slate-500">18%</span></li>
-            </ol>
+            <h3 class="font-semibold text-[var(--brand-blue)]">Implementation Roadmap</h3>
+            <div class="mt-4">
+              <div class="relative">
+                {/* Connector line */}
+                <div class="absolute top-6 left-4 right-4 h-0.5 bg-slate-200" />
+                <div class="grid grid-cols-4 gap-4 relative z-10 text-center">
+                  <div class="flex flex-col items-center">
+                    <span class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'var(--brand-blue)' }}>1</span>
+                    <span class="mt-2 font-medium">Planning</span>
+                    <span class="mt-1 text-xs text-slate-500">100%</span>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <span class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'var(--brand-green)' }}>2</span>
+                    <span class="mt-2 font-medium">Deployment</span>
+                    <span class="mt-1 text-xs text-slate-500">65%</span>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <span class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'var(--brand-orange)' }}>3</span>
+                    <span class="mt-2 font-medium">Verification</span>
+                    <span class="mt-1 text-xs text-slate-500">42%</span>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <span class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ background: 'var(--brand-purple)' }}>4</span>
+                    <span class="mt-2 font-medium">Handover</span>
+                    <span class="mt-1 text-xs text-slate-500">18%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

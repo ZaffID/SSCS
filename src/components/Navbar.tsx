@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { createSignal, onCleanup } from 'solid-js';
 import { IoNotifications } from 'solid-icons/io';
 import { alerts } from '../store/data';
+import { A } from '@solidjs/router';
 
 const Navbar: Component = () => {
   const [now, setNow] = createSignal(new Date());
@@ -102,10 +103,10 @@ const Navbar: Component = () => {
           )}
         </div>
 
-        <div class="relative w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold" style={{ background: 'linear-gradient(135deg, var(--brand-red), var(--brand-yellow))' }}>
+        <A href="/profile" class="relative w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold hover:opacity-90" style={{ background: 'linear-gradient(135deg, #FACC15, #FFC107)' }}>
           N
           <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white" style={{ background: 'var(--brand-green)' }}></span>
-        </div>
+        </A>
       </div>
     </header>
   );

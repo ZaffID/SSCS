@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 
 const Layout: Component<ParentProps> = (props) => {
   return (
-    <div class="min-h-screen bg-slate-50 text-slate-900" style={{ "padding-left": 'var(--sidebar-width)' }}>
+    <div class="min-h-screen bg-slate-50 text-slate-900 transition-[padding-left] duration-300" style={{ "padding-left": 'var(--sidebar-width)' }}>
       <Sidebar />
       <main class="min-w-0">
         <Navbar />
