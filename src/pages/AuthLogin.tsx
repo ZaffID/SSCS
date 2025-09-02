@@ -1,15 +1,22 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, Show } from 'solid-js';
 import { A, useNavigate } from '@solidjs/router';
 
 const AuthLogin: Component = () => {
   const [role, setRole] = createSignal<'user' | 'admin'>('user');
   const [showPwd, setShowPwd] = createSignal(false);
+  const [company, setCompany] = createSignal('');
+  const [submitted, setSubmitted] = createSignal(false);
 
   const navigate = useNavigate();
   const onSubmit = (e: Event) => {
     e.preventDefault();
+    setSubmitted(true);
+    // Require company selection for 'user' role
+    if (role() === 'user' && !company()) {
+      return; // stop submit until company selected
+    }
     // TODO: replace with real auth; for now redirect to dashboard
-    navigate('/', { replace: true });
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -45,12 +52,19 @@ const AuthLogin: Component = () => {
                 <label class="block text-sm font-medium text-slate-700 mb-1">Perusahaan</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🏢</span>
-                  <select class="peer w-full appearance-none rounded-lg pl-10 pr-9 py-2 bg-white border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[--brand-red] transition duration-150">
+                  <select
+                    class={`peer w-full appearance-none rounded-lg pl-10 pr-9 py-2 bg-white border focus:outline-none transition duration-150 ${submitted() && !company() ? 'border-red-400 focus:ring-2 focus:ring-red-300' : 'border-slate-300 focus:ring-2 focus:ring-[--brand-red]'}`}
+                    value={company()}
+                    onChange={(e) => setCompany(e.currentTarget.value)}
+                  >
                     <option value="">Select Company</option>
                     <option>PT Pertamina</option>
                   </select>
                   <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 peer-focus:text-[--brand-red] transition-colors">▾</span>
                 </div>
+                <Show when={submitted() && !company()}>
+                  <p class="mt-1 text-xs text-red-600">Silakan pilih perusahaan terlebih dahulu.</p>
+                </Show>
               </div>
             )}
 
@@ -90,7 +104,7 @@ const AuthLogin: Component = () => {
               <A href="/forgot-password" class="text-sm text-[var(--brand-red)] hover:underline">Lupa Password?</A>
             </div>
 
-            <button type="submit" class="w-full text-white rounded-xl py-2.5 shadow-md transition duration-150 ease-out flex items-center justify-center gap-2 bg-gradient-to-r from-[#f37a7f] to-[var(--brand-red)] hover:shadow-lg hover:brightness-105 active:translate-y-[1px] active:scale-[0.99] active:ring-4 active:ring-[--brand-red]/30 active:shadow-[0_0_0_4px_rgba(237,28,36,0.15)]">
+            <button type="submit" class="w-full text-white rounded-xl py-2.5 shadow-md transition duration-150 ease-out flex items-center justify-center gap-2 bg-gradient-to-r from-[#f37a7f] to-[var(--brand-red)] hover:shadow-lg hover:brightness-105 active:translate-y-[1px] active:scale-[0.99] active:ring-4 active:ring-[--brand-red]/30 active:shadow-[0_0_0_4px_rgba(237,28,36,0.15)] disabled:opacity-60" disabled={role()==='user' && !company()}>
               <span>Masuk</span>
               <span>→</span>
             </button>

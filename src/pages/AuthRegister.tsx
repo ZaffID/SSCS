@@ -3,9 +3,11 @@ import { A } from '@solidjs/router';
 
 const AuthRegister: Component = () => {
   const [showPwd, setShowPwd] = createSignal(false);
+  const [company] = createSignal('PT Pertamina');
   const onSubmit = (e: Event) => {
     e.preventDefault();
-    alert('Register submitted (mock)');
+    // company is locked to PT Pertamina
+    alert(`Register submitted (mock) for company: ${company()}`);
   };
 
   return (
@@ -21,13 +23,14 @@ const AuthRegister: Component = () => {
               <label class="block text-sm font-medium text-slate-700 mb-1">Company</label>
               <div class="relative">
                 <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🏢</span>
-                <select class="peer w-full appearance-none rounded-lg pl-9 pr-9 py-2 bg-white ring-1 ring-slate-300 hover:ring-slate-400 focus:ring-2 focus:ring-[--brand-red] focus:border-[--brand-red] ring-offset-1 outline-none transition-all duration-200 focus:bg-gradient-to-r focus:from-red-50 focus:to-white focus:shadow-[0_8px_24px_rgba(197,22,28,0.15)]">
-                  <option value="">Select Company</option>
-                  <option>PT Pertamina</option>
-                  <option>PT Freeport Indonesia</option>
-                  <option>PT Chandra Asri Petrochemical</option>
+                <select
+                  class="peer w-full appearance-none rounded-lg pl-9 pr-9 py-2 bg-slate-50 ring-1 ring-slate-300 text-slate-600 cursor-not-allowed"
+                  value={company()}
+                  disabled
+                >
+                  <option value={company()}>{company()}</option>
                 </select>
-                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 peer-focus:text-[--brand-red] transition-colors">▾</span>
+                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-300">▾</span>
               </div>
             </div>
 
