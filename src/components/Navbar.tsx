@@ -1,13 +1,25 @@
 import type { Component } from 'solid-js';
-import { createSignal, onCleanup } from 'solid-js';
+import { createSignal, onCleanup, onMount, Show, createMemo } from 'solid-js';
 import { IoNotifications } from 'solid-icons/io';
 import { alerts } from '../store/data';
-import { A } from '@solidjs/router';
+import { A, useLocation } from '@solidjs/router';
 
 const Navbar: Component = () => {
+  const location = useLocation();
   const [now, setNow] = createSignal(new Date());
   const [openNotif, setOpenNotif] = createSignal(false);
   const unreadCount = () => alerts().length;
+
+  // Profile data from localStorage for avatar/name consistency
+  const [fullName, setFullName] = createSignal('Nama User');
+  const [email, setEmail] = createSignal('user@example.com');
+  const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
+  const initials = createMemo(() => {
+    const parts = fullName().trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? '';
+    const second = parts[1]?.[0] ?? '';
+    return (first + second).toUpperCase() || 'U';
+  });
 
   let notifRef: HTMLDivElement | undefined;
   const handleDocClick = (e: MouseEvent) => {
@@ -25,6 +37,37 @@ const Navbar: Component = () => {
   const dateStr = () => now().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = () => now().toLocaleTimeString('id-ID', { hour12: false });
 
+  // Determine current page title from route
+  const pageTitle = () => {
+    const path = location.pathname.toLowerCase();
+    const map: Record<string, string> = {
+      '/dashboard': 'Dashboard',
+      '/map': 'Live Map',
+      '/stations': 'Stations',
+      '/users': 'Users',
+      '/technician': 'Technicians',
+      '/analytics': 'Analytics',
+      '/consumer': 'Consumer',
+      '/profile': 'Profile'
+    };
+    if (map[path]) return map[path];
+    // Fallback: last segment capitalized
+    const seg = path.split('/').filter(Boolean).pop() || 'Dashboard';
+    return seg.charAt(0).toUpperCase() + seg.slice(1);
+  };
+
+  onMount(() => {
+    try {
+      const saved = localStorage.getItem('profileData');
+      if (saved) {
+        const obj = JSON.parse(saved);
+        if (obj.fullName) setFullName(obj.fullName);
+        if (obj.email) setEmail(obj.email);
+        if (typeof obj.avatarUrl !== 'undefined') setAvatarUrl(obj.avatarUrl);
+      }
+    } catch {}
+  });
+
   return (
     <header class="h-16 bg-white/70 backdrop-blur border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
       {/* Kiri: breadcrumb + search */}
@@ -34,7 +77,7 @@ const Navbar: Component = () => {
           {/* Home icon */}
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.125 1.125 0 011.592 0L21.75 12M4.5 9.75V21a.75.75 0 00.75.75H9.75v-6h4.5v6h4.5a.75.75 0 00.75-.75V9.75"/></svg>
           <span>/</span>
-          <span class="text-slate-800 font-medium">Dashboard</span>
+          <span class="text-slate-800 font-medium">{pageTitle()}</span>
         </div>
 
         {/* Search pill */}
@@ -46,7 +89,7 @@ const Navbar: Component = () => {
             <input
               type="text"
               placeholder="Search assets, spare parts or ..."
-              class="w-full pl-9 pr-3 py-2 rounded-full border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-[var(--brand-blue)] focus:ring-[var(--brand-blue)]"
+              class="w-full pl-9 pr-3 py-2 rounded-full border border-slate-200 bg-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:border-[var(--brand-red)] focus:ring-[var(--brand-red)]"
             />
           </div>
         </div>
@@ -56,11 +99,11 @@ const Navbar: Component = () => {
       <div class="flex items-center gap-3 text-sm text-slate-600">
         <div class="hidden md:flex items-center gap-2">
           <div class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-blue)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M7.5 3.75h9A2.25 2.25 0 0118.75 6v12A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V6A2.25 2.25 0 017.5 3.75z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-red)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M7.5 3.75h9A2.25 2.25 0 0118.75 6v12A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V6A2.25 2.25 0 017.5 3.75z"/></svg>
             <span>{dateStr()}</span>
           </div>
           <div class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-blue)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[var(--brand-red)]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3 3"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/></svg>
             <span>{timeStr()}</span>
           </div>
         </div>
@@ -91,7 +134,7 @@ const Navbar: Component = () => {
               <ul class="max-h-80 overflow-auto">
                 {alerts().map(n => (
                   <li class="px-4 py-3 flex items-start gap-3 hover:bg-slate-50">
-                    <span class="mt-1 inline-block w-2 h-2 rounded-full" style={{ background: n.level === 'error' ? 'var(--brand-red)' : 'var(--brand-blue)' }}></span>
+                    <span class="mt-1 inline-block w-2 h-2 rounded-full" style={{ background: 'var(--brand-red)' }}></span>
                     <div class="flex-1">
                       <p class="text-sm text-slate-800">{n.message}</p>
                     </div>
@@ -103,8 +146,10 @@ const Navbar: Component = () => {
           )}
         </div>
 
-        <A href="/profile" class="relative w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold hover:opacity-90" style={{ background: 'linear-gradient(135deg, #FACC15, #FFC107)' }}>
-          N
+        <A href="/profile" class="relative w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold hover:opacity-90 overflow-hidden" style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #ef4444 55%, #fb7185 100%)' }}>
+          <Show when={avatarUrl()} fallback={<span>{initials()}</span>}>
+            <img src={avatarUrl()!} alt="Avatar" class="w-full h-full object-cover" />
+          </Show>
           <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-white" style={{ background: 'var(--brand-green)' }}></span>
         </A>
       </div>

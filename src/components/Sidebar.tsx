@@ -1,10 +1,11 @@
 import type { Component } from 'solid-js';
-import { createSignal, Show, createEffect, onMount } from 'solid-js';
+import { createSignal, Show, createEffect, onMount, createMemo } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { FaSolidGear, FaSolidLocationDot, FaSolidUser, FaSolidGasPump } from 'solid-icons/fa';
 import { IoHammerSharp } from 'solid-icons/io';
 import { BiSolidDashboard } from 'solid-icons/bi';
 import { A, useLocation } from '@solidjs/router';
+import logoSrc from '../assets/logo/icon.png';
 
 const Sidebar: Component = () => {
   const location = useLocation();
@@ -14,6 +15,25 @@ const Sidebar: Component = () => {
   const [showStationModal, setShowStationModal] = createSignal(false);
   const [showTicketModal, setShowTicketModal] = createSignal(false);
   const isActive = (path: string) => location.pathname === path;
+  // Profile data for avatar consistency
+  const [fullName, setFullName] = createSignal('Nama User');
+  const [avatarUrl, setAvatarUrl] = createSignal<string | null>(null);
+  const initials = createMemo(() => {
+    const parts = fullName().trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? '';
+    const second = parts[1]?.[0] ?? '';
+    return (first + second).toUpperCase() || 'U';
+  });
+  onMount(() => {
+    try {
+      const saved = localStorage.getItem('profileData');
+      if (saved) {
+        const obj = JSON.parse(saved);
+        if (obj.fullName) setFullName(obj.fullName);
+        if (typeof obj.avatarUrl !== 'undefined') setAvatarUrl(obj.avatarUrl);
+      }
+    } catch {}
+  });
 
   // Sync CSS variable with collapsed state for layout padding
   createEffect(() => {
@@ -24,26 +44,32 @@ const Sidebar: Component = () => {
   return (
     <aside
       class={
-        'hidden md:flex md:flex-col fixed left-0 top-0 h-screen text-slate-100 border-r shadow-[0_10px_30px_rgba(239,68,68,0.20)] transition-[width] duration-300 ' +
+        'hidden md:flex md:flex-col fixed left-0 top-0 h-screen text-slate-100 transition-[width] duration-300 ' +
         (collapsed() ? 'w-16' : 'w-64')
       }
       style={{
-        background:
-          'linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-middle) 55%, var(--sidebar-end) 100%)',
-        'border-right': '1px solid var(--sidebar-border)'
+        background: 'linear-gradient(180deg, #0f0b0d 0%, #0e0a0c 55%, #0c090a 100%)',
+        'border-right': '1px solid rgba(190,18,60,0.14)',
+        'box-shadow': '0 10px 28px rgba(190,18,60,0.16)'
       }}
     >
-      <div class="h-16 flex items-center justify-between px-3 border-b/50" style={{ 'border-bottom': '1px solid var(--sidebar-border)' }}>
+      <div class="h-16 flex items-center justify-between px-3" style={{ 'border-bottom': '1px solid rgba(248,113,113,0.10)' }}>
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center z-10">
-            <span class="text-sm font-bold">P</span>
-          </div>
+          <A href="/dashboard" class={collapsed() ? 'mx-auto' : ''} title="Home">
+            <div class={collapsed() ? 'relative w-9 h-9' : 'relative w-9 h-9'}>
+              <img src={logoSrc} alt="Logo" class="w-9 h-9 rounded-xl shadow-sm" />
+              <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-[rgba(15,11,13,0.9)]"></span>
+            </div>
+          </A>
           <Show when={!collapsed()}>
-            <span class="text-base font-semibold tracking-wide whitespace-nowrap">Ops Center</span>
+            <div class="leading-tight">
+              <div class="text-sm font-semibold tracking-wide">SSCS</div>
+              <div class="text-[11px] text-slate-300/80">Operations Center</div>
+            </div>
           </Show>
         </div>
         <button
-          class="size-8 rounded-md hover:bg-white/10 flex items-center justify-center"
+          class="size-8 rounded-lg hover:bg-white/5 transition-colors duration-300 ease-[cubic-bezier(.2,.8,.2,1)] flex items-center justify-center text-slate-200/90"
           aria-label="Toggle sidebar"
           onClick={() => setCollapsed(!collapsed())}
           title={collapsed() ? 'Expand' : 'Collapse'}
@@ -55,15 +81,15 @@ const Sidebar: Component = () => {
       </div>
       {/* Quick Actions */}
       <Show when={!collapsed()}>
-        <div class="px-3 py-3 border-b/50" style={{ 'border-bottom': '1px solid var(--sidebar-border)' }}>
+        <div class="px-3 py-3 border-b/50" style={{ 'border-bottom': '1px solid rgba(190,18,60,0.14)' }}>
           <div class="grid grid-cols-3 gap-2">
-            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-colors" title="Add User" onClick={() => setShowUserModal(true)}>
+            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] hover:translate-y-[-1px]" title="Add User" onClick={() => setShowUserModal(true)}>
               + User
             </button>
-            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-colors" title="Add Station" onClick={() => setShowStationModal(true)}>
+            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] hover:translate-y-[-1px]" title="Add Station" onClick={() => setShowStationModal(true)}>
               + Station
             </button>
-            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-colors" title="New Ticket" onClick={() => setShowTicketModal(true)}>
+            <button class="px-2.5 py-1.5 text-xs rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] hover:translate-y-[-1px]" title="New Ticket" onClick={() => setShowTicketModal(true)}>
               + Ticket
             </button>
           </div>
@@ -71,45 +97,51 @@ const Sidebar: Component = () => {
       </Show>
       {/* Hidden quick actions in collapsed mode (removed per UX request) */}
       <nav class="flex-1 overflow-y-auto py-4 nice-scroll pr-1">
-        <ul class={ (collapsed() ? 'px-0' : 'px-3') + ' space-y-2'}>
+        <ul class={(collapsed() ? 'px-0' : 'px-3') + ' space-y-2'}>
           <li>
             <A
               href="/dashboard"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/dashboard') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/dashboard') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Dashboard"
             >
-              <BiSolidDashboard class="w-5 h-5 text-white/95" />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <BiSolidDashboard class="w-5 h-5 text-white/95" />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span class="font-semibold">Dashboard</span>
                   <span class="text-xs text-slate-100/80">Overview and summary</span>
                 </div>
               </Show>
-              <Show when={!collapsed() && isActive('/dashboard')}> 
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+              <Show when={!collapsed() && isActive('/dashboard')}>
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
           <Show when={!collapsed()}>
             <li class="pt-2">
-              <p class="px-3 text-xs uppercase tracking-wider text-slate-200/80">Global Settings</p>
+              <p class="px-3 text-xs uppercase tracking-wider text-slate-300/80">Global Settings</p>
             </li>
           </Show>
           <li>
             <A
               href="/map"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/map') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/map') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Live Map"
             >
-              <FaSolidLocationDot class="w-5 h-5 text-white/95" />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <FaSolidLocationDot class="w-5 h-5 text-white/95" />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Live Map</span>
@@ -117,26 +149,29 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/map')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
           <Show when={!collapsed()}>
             <li class="pt-2">
-              <p class="px-3 text-xs uppercase tracking-wider text-slate-200/80">Assets</p>
+              <p class="px-3 text-xs uppercase tracking-wider text-slate-300/80">Assets</p>
             </li>
           </Show>
           <li>
             <A
               href="/stations"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/stations') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/stations') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Stations"
             >
-              <FaSolidGasPump />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <FaSolidGasPump />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Stations</span>
@@ -144,7 +179,7 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/stations')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
@@ -152,13 +187,16 @@ const Sidebar: Component = () => {
             <A
               href="/users"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/users') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/users') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Users"
             >
-              <FaSolidUser />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <FaSolidUser />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Users</span>
@@ -166,7 +204,7 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/users')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
@@ -174,13 +212,16 @@ const Sidebar: Component = () => {
             <A
               href="/technician"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/technician') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/technician') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Technicians"
             >
-              <IoHammerSharp />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <IoHammerSharp />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Technicians</span>
@@ -188,26 +229,29 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/technician')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
           <Show when={!collapsed()}>
             <li class="pt-2">
-              <p class="px-3 text-xs uppercase tracking-wider text-slate-200/80">Insights</p>
+              <p class="px-3 text-xs uppercase tracking-wider text-slate-300/80">Insights</p>
             </li>
           </Show>
           <li>
             <A
               href="/analytics"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/analytics') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/analytics') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Analytics"
             >
-              <FaSolidGear class="w-5 h-5 text-white/95" />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:bg-white/10 group-hover:ring-white/20 group-active:scale-95'}>
+                <FaSolidGear class="w-5 h-5 text-white/95" />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Analytics</span>
@@ -215,7 +259,7 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/analytics')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
@@ -223,13 +267,16 @@ const Sidebar: Component = () => {
             <A
               href="/consumer"
               class={
-                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-4 py-3 rounded-2xl') +
-                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ' +
-                (isActive('/consumer') ? 'bg-white/10 shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : 'hover:bg-white/5')
+                'group ' +
+                (collapsed() ? 'justify-center h-10 w-10 p-0 rounded-xl mx-auto' : 'px-3 py-2.5 rounded-2xl') +
+                ' relative flex items-center ' + (collapsed() ? 'gap-0' : 'gap-3') + ' transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[.99] ' +
+                (isActive('/consumer') ? 'bg-[rgba(190,18,60,0.12)] border border-[rgba(190,18,60,0.22)] shadow-[0_10px_26px_rgba(190,18,60,0.22)]' : 'hover:bg-white/5 hover:border hover:border-white/10')
               }
               title="Consumer"
             >
-              <FaSolidLocationDot class="w-5 h-5 text-white/95" />
+              <div class={collapsed() ? 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all group-hover:bg-white/10 group-active:scale-95' : 'grid place-items-center w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 transition-all group-hover:bg-white/10 group-active:scale-95'}>
+                <FaSolidLocationDot class="w-5 h-5 text-white/95" />
+              </div>
               <Show when={!collapsed()}>
                 <div class="flex flex-col leading-tight">
                   <span>Consumer</span>
@@ -237,18 +284,22 @@ const Sidebar: Component = () => {
                 </div>
               </Show>
               <Show when={!collapsed() && isActive('/consumer')}>
-                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'white' }} />
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #f43f5e, #ef4444)' }} />
               </Show>
             </A>
           </li>
         </ul>
       </nav>
-      <div class="p-3 mt-auto" style={{ 'border-top': collapsed() ? 'none' : '1px solid var(--sidebar-border)' }}>
+      <div class="p-3 mt-auto" style={{ 'border-top': collapsed() ? 'none' : '1px solid rgba(248,113,113,0.10)' }}>
         <A href="/profile" class={collapsed() ? 'flex items-center justify-center' : 'flex items-center gap-3'}>
-          <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold shadow-sm" style={{ background: 'linear-gradient(135deg, #FACC15, #FFC107)' }}>N</div>
+          <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-semibold shadow-sm overflow-hidden" style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #ef4444 55%, #fb7185 100%)' }}>
+            <Show when={avatarUrl()} fallback={<span>{initials()}</span>}>
+              <img src={avatarUrl()!} alt="Avatar" class="w-full h-full object-cover" />
+            </Show>
+          </div>
           <Show when={!collapsed()}>
             <div>
-              <p class="text-sm font-medium">Nama User</p>
+              <p class="text-sm font-medium">{fullName()}</p>
               <p class="text-xs text-slate-300 flex items-center gap-1">
                 <span class="inline-block w-2 h-2 rounded-full" style={{ background: 'var(--brand-green)' }} />
                 User
@@ -257,7 +308,7 @@ const Sidebar: Component = () => {
           </Show>
         </A>
         <Show when={!collapsed()}>
-          <A href="/" class="mt-3 w-full inline-block text-left text-sm opacity-90 hover:opacity-100 transition-opacity" style={{ color: 'var(--surface-0)' }}>Logout</A>
+          <A href="/" class="mt-3 w-full inline-block text-left text-sm opacity-90 hover:opacity-100 transition-opacity text-red-300 hover:text-red-200">Logout</A>
         </Show>
       </div>
       {/* Modals */}
